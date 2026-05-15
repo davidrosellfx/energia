@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Dashboard Semanal</title>
+<style>
+  :root, [data-theme="light"]{
+    --bg:#fafaf9;
+    --panel:#ffffff;
+    --ink:#1c1917;
+    --muted:#78716c;
+    --line:#e7e5e4;
+    --line-soft:#f1f0ee;
+    --slot-bg:#ffffff;
+    --hour-bg:#ffffff;
+    --chip-bg:#ffffff;
+    --input-bg:#ffffff;
+    --shadow:0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.04);
+  }
+  [data-theme="dark"]{
+    --bg:#0c0a09;
+    --panel:#1c1917;
+    --ink:#fafaf9;
+    --muted:#a8a29e;
+    --line:#292524;
+    --line-soft:#1f1c1a;
+    --slot-bg:#1c1917;
+    --hour-bg:#1c1917;
+    --chip-bg:#292524;
+    --input-bg:#0c0a09;
+    --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.4);
+  }
+  :root{
+    --radius:14px;
+    --trading:#3b82f6;
+    --negocio:#a855f7;
+    --comunidad:#f97316;
+    --salud:#22c55e;
+    --vida:#94a3b8;
+    --custom:#64748b;
+    --green:#16a34a;
+    --yellow:#eab308;
+    --red:#ef4444;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",system-ui,sans-serif;
+    font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;
+    transition:background .2s, color .2s}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  input{font:inherit;color:var(--ink);background:var(--input-bg);border:1px solid var(--line);
+    border-radius:8px;padding:6px 10px;outline:none}
+  input:focus{border-color:var(--ink)}
+
+  .app{display:grid;grid-template-columns:280px 1fr 320px;gap:18px;padding:18px;min-height:100vh}
+
+  .sidebar, .right{background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:18px;display:flex;flex-direction:column;gap:18px;height:calc(100vh - 36px);overflow:auto}
+
+  .brand{display:flex;flex-direction:column;gap:2px}
+  .brand h1{margin:0;font-size:17px;font-weight:600;letter-spacing:-0.01em}
+  .brand p{margin:0;color:var(--muted);font-size:12px}
+
+  .group h3{margin:0 0 8px;font-size:11px;font-weight:600;text-transform:uppercase;
+    letter-spacing:.08em;color:var(--muted)}
+  .blocks{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;
+    font-size:12px;font-weight:500;border:1px solid var(--line);background:var(--chip-bg);
+    cursor:grab;user-select:none;transition:transform .08s ease, box-shadow .08s ease;color:var(--ink)}
+  .chip:hover{transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.06)}
+  .chip:active{cursor:grabbing}
+  .chip .dot{width:8px;height:8px;border-radius:999px;background:var(--c)}
+  .chip .e{color:var(--muted);font-variant-numeric:tabular-nums;font-size:11px}
+
+  .center{background:var(--panel);border-radius:var(--radius);box-shadow:var(--shadow);
+    padding:18px;display:flex;flex-direction:column;gap:14px;height:calc(100vh - 36px);overflow:hidden}
+
+  .toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .toolbar .title{font-size:15px;font-weight:600;letter-spacing:-0.01em}
+  .toolbar .sub{color:var(--muted);font-size:12px;margin-left:8px;font-weight:400}
+  .toolbar .actions{display:flex;gap:6px;flex-wrap:wrap}
+  .btn{padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--chip-bg);color:var(--ink);
+    font-size:12px;font-weight:500;transition:background .1s}
+  .btn:hover{background:var(--line-soft)}
+  .btn.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  .btn.primary:hover{opacity:.9}
+  .btn.icon{padding:6px 9px}
+
+  .grid-wrap{flex:1;overflow:auto;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+  .grid{display:grid;min-width:760px;position:relative}
+
+  .head-cell{padding:10px 8px;text-align:center;border-left:1px solid var(--line-soft);
+    display:flex;flex-direction:column;gap:4px;align-items:center;background:var(--panel);
+    position:sticky;top:0;z-index:3;border-bottom:1px solid var(--line)}
+  .head-cell:first-child{border-left:0}
+  .head-cell .dow{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .head-cell .energy{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-variant-numeric:tabular-nums;font-weight:500}
+  .head-cell .energy .pill{padding:2px 8px;border-radius:999px;font-size:11px;color:#fff;font-weight:600}
+  .pill.green{background:var(--green)} .pill.yellow{background:var(--yellow)} .pill.red{background:var(--red)}
+  .pill.gray{background:#a8a29e}
+
+  .hour{height:22px;border-top:1px solid var(--line-soft);
+    font-size:10px;color:var(--muted);padding:1px 6px;text-align:right;background:var(--hour-bg);line-height:20px}
+  .hour.half{border-top:1px dashed transparent;color:transparent}
+  .day{position:relative;border-left:1px solid var(--line-soft);background:var(--slot-bg);
+    display:grid}
+  .slot{height:22px;border-top:1px solid var(--line-soft)}
+  .slot.half{border-top:1px dashed var(--line-soft);opacity:.6}
+  .slot.drop{background:rgba(59,130,246,.12)}
+
+  .block{border-radius:8px;padding:6px 8px;color:#fff;font-size:11.5px;font-weight:500;
+    cursor:grab;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.1);
+    display:flex;flex-direction:column;gap:1px;margin:2px 4px;position:relative;
+    border-left:3px solid rgba(0,0,0,.18)}
+  .block:active{cursor:grabbing}
+  .block .b-name{display:flex;justify-content:space-between;align-items:center;gap:6px}
+  .block .b-meta{font-size:10px;opacity:.85;font-weight:400}
+  .block .x{opacity:0;font-size:14px;line-height:1;padding:0 2px;border-radius:4px;color:#fff}
+  .block:hover .x{opacity:.9}
+  .block .x:hover{background:rgba(0,0,0,.18)}
+  .block .resize{position:absolute;left:0;right:0;bottom:0;height:8px;cursor:ns-resize;
+    display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .1s}
+  .block:hover .resize{opacity:.6}
+  .block .resize::before{content:"";width:24px;height:3px;border-radius:2px;background:rgba(255,255,255,.7)}
+
+  .block.short{padding:2px 8px;font-size:11px}
+  .block.short .b-meta{display:none}
+  .block.short .b-name{font-size:10.5px}
+  .day[data-day-index="5"]{background:linear-gradient(0deg, rgba(148,163,184,.04), rgba(148,163,184,.04)), var(--slot-bg)}
+  .block.overlap{outline:2px solid #ef4444;outline-offset:-2px;animation:pulse 1.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{outline-color:#ef4444}50%{outline-color:#fca5a5}}
+
+  .now-line{position:absolute;left:0;right:0;height:2px;background:#ef4444;z-index:4;pointer-events:none;
+    box-shadow:0 0 0 1px rgba(255,255,255,.4)}
+  .now-line::before{content:"";position:absolute;left:-4px;top:-3px;width:8px;height:8px;border-radius:999px;background:#ef4444}
+
+  .balance-bar{display:flex;height:10px;border-radius:999px;overflow:hidden;background:var(--line);margin-top:4px}
+  .balance-bar > div{height:100%}
+  .balance-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;font-size:11px;color:var(--muted)}
+  .balance-legend .li{display:flex;align-items:center;gap:5px}
+  .balance-legend .d{width:8px;height:8px;border-radius:2px}
+
+  .motiv{font-size:13px;line-height:1.45;color:var(--ink);padding:14px;border-radius:10px;
+    background:linear-gradient(135deg,var(--line-soft),transparent);border:1px solid var(--line);
+    font-style:italic;font-weight:500;letter-spacing:-0.005em}
+  .motiv::before{content:"\201C";font-size:24px;color:var(--muted);line-height:0;vertical-align:-8px;margin-right:4px;font-style:normal}
+
+  .right h2{margin:0;font-size:13px;font-weight:600;letter-spacing:-0.01em}
+  .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+  .stat{padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--chip-bg);
+    display:flex;flex-direction:column;gap:1px}
+  .stat .lbl{font-size:9.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  .stat .val{font-size:15px;font-weight:600;letter-spacing:-0.02em;font-variant-numeric:tabular-nums}
+  .stat .sub{display:none}
+
+  .legend{display:flex;flex-direction:column;gap:6px}
+  .legend .row{display:flex;align-items:center;justify-content:space-between;font-size:12px}
+  .legend .row .l{display:flex;align-items:center;gap:8px}
+  .legend .row .l .d{width:10px;height:10px;border-radius:3px}
+  .legend .row .v{color:var(--muted);font-variant-numeric:tabular-nums}
+
+  .days{display:flex;gap:4px}
+  .dchip{flex:1;text-align:center;padding:6px 4px;border-radius:8px;font-size:11px;color:#fff;font-weight:600}
+
+  .quote{font-size:12px;color:var(--muted);line-height:1.5;padding:12px;border:1px dashed var(--line);
+    border-radius:10px;background:var(--line-soft)}
+  .quote b{color:var(--ink)}
+
+  .tpl-list{display:flex;flex-direction:column;gap:6px}
+  .tpl{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;
+    border:1px solid var(--line);border-radius:8px;background:var(--chip-bg)}
+  .tpl .name{font-size:12px;font-weight:500}
+  .tpl .meta{font-size:11px;color:var(--muted)}
+  .tpl .actions{display:flex;gap:4px}
+  .tpl .actions button{padding:4px 8px;border-radius:6px;border:1px solid var(--line);background:var(--panel);font-size:11px;color:var(--ink)}
+  .tpl .actions button:hover{background:var(--line-soft)}
+  .tpl .actions .apply{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+  .save-row{display:flex;gap:6px}
+  .save-row input{flex:1;font-size:12px}
+
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+  ::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand">
+      <h1>Dashboard Semanal</h1>
+      <p>Energía · Estructura · Claridad</p>
+    </div>
+
+    <div class="group">
+      <h3 style="color:var(--trading)">Trading</h3>
+      <div class="blocks" id="cat-trading"></div>
+    </div>
+    <div class="group">
+      <h3 style="color:var(--negocio)">Negocio</h3>
+      <div class="blocks" id="cat-negocio"></div>
+    </div>
+    <div class="group">
+      <h3 style="color:var(--comunidad)">Comunidad</h3>
+      <div class="blocks" id="cat-comunidad"></div>
+    </div>
+    <div class="group">
+      <h3 style="color:var(--salud)">Salud · recarga</h3>
+      <div class="blocks" id="cat-salud"></div>
+    </div>
+    <div class="group">
+      <h3 style="color:var(--vida)">Vida</h3>
+      <div class="blocks" id="cat-vida"></div>
+    </div>
+    <div class="group">
+      <h3 style="color:var(--custom)">Personalizado</h3>
+      <div class="blocks" id="cat-custom"></div>
+    </div>
+
+    <div class="quote">
+      Arrastra al calendario.<br>
+      Mueve bloques entre slots.<br>
+      Tira del borde inferior para cambiar duración.<br>
+      × para borrar.
+    </div>
+  </aside>
+
+  <main class="center">
+    <div class="toolbar">
+      <div>
+        <span class="title">Semana</span>
+        <span class="sub" id="weekRange"></span>
+      </div>
+      <div class="actions">
+        <button class="btn icon" id="themeBtn" title="Cambiar tema">🌙</button>
+        <button class="btn" id="prevWeek">‹</button>
+        <button class="btn" id="todayBtn">Hoy</button>
+        <button class="btn" id="nextWeek">›</button>
+        <button class="btn" id="clearWeek">Vaciar</button>
+      </div>
+    </div>
+
+    <div class="grid-wrap">
+      <div class="grid" id="grid"></div>
+    </div>
+  </main>
+
+  <aside class="right">
+    <div class="motiv" id="motivBox"></div>
+
+    <h2>Equilibrio</h2>
+    <div class="balance-bar" id="balanceBar"></div>
+    <div class="balance-legend" id="balanceLegend"></div>
+
+    <h2 style="margin-top:6px">Resumen de la semana</h2>
+
+    <div class="stats">
+      <div class="stat"><div class="lbl">Energía media</div>
+        <div class="val" id="stEnergy">—</div><div class="sub">restante / día</div></div>
+      <div class="stat"><div class="lbl">Horas trading</div>
+        <div class="val" id="stTrading">0h</div><div class="sub">Londres · Nasdaq · más</div></div>
+      <div class="stat"><div class="lbl">Horas negocio</div>
+        <div class="val" id="stNegocio">0h</div><div class="sub">producto · IA · grabar</div></div>
+      <div class="stat"><div class="lbl">Horas salud</div>
+        <div class="val" id="stSalud">0h</div><div class="sub">recarga real</div></div>
+      <div class="stat"><div class="lbl">Desconexión</div>
+        <div class="val" id="stVida">0h</div><div class="sub">vida + libre</div></div>
+      <div class="stat"><div class="lbl">Bloques cog. fuertes</div>
+        <div class="val" id="stStrong">0</div><div class="sub">máx 2 / día extra</div></div>
+    </div>
+
+    <h2 style="margin-top:6px">Estado por día</h2>
+    <div class="days" id="dayChips"></div>
+
+    <h2 style="margin-top:6px">Plantillas</h2>
+    <div class="save-row">
+      <input id="tplName" placeholder="Nombre (ej. Semana tipo)" />
+      <button class="btn primary" id="saveTpl">Guardar</button>
+    </div>
+    <div class="tpl-list" id="tplList"></div>
+
+    <div class="quote">
+      <b>Domingo · planificación (máx 1h):</b><br>
+      mover bloques · distribuir carga · equilibrar trading, negocio, salud y vida.<br><br>
+      <b>Día libre:</b> arrastra el bloque "Día libre" sobre cualquier día para marcarlo como desconexión completa.
+    </div>
+  </aside>
+
+</div>
+
+<script>
+/* ========================= DATA MODEL ========================= */
+
+const CATEGORIES = {
+  trading:   { color:"#3b82f6", label:"Trading"   },
+  negocio:   { color:"#a855f7", label:"Negocio"   },
+  comunidad: { color:"#f97316", label:"Comunidad" },
+  salud:     { color:"#22c55e", label:"Salud"     },
+  vida:      { color:"#94a3b8", label:"Vida"      },
+  custom:    { color:"#64748b", label:"Personalizado" },
+};
+
+const BLOCK_TYPES = [
+  { id:"londres",     cat:"trading",   name:"Londres",     dur:4, energy:-20 },
+  { id:"nasdaq",      cat:"trading",   name:"Nasdaq",      dur:4, energy:-25 },
+  { id:"journaling",  cat:"trading",   name:"Journaling",  dur:2, energy:-5  },
+  { id:"revision",    cat:"trading",   name:"Revisión",    dur:2, energy:-5  },
+  { id:"grabacion",   cat:"negocio",   name:"Grabación",   dur:4, energy:-30, strong:true },
+  { id:"desarrollo",  cat:"negocio",   name:"Desarrollo",  dur:4, energy:-35, strong:true },
+  { id:"estrategia",  cat:"negocio",   name:"Estrategia",  dur:2, energy:-25, strong:true },
+  { id:"organizacion",cat:"negocio",   name:"Organización",dur:2, energy:-10 },
+  { id:"reuniones",   cat:"negocio",   name:"Reuniones",   dur:2, energy:-15 },
+  { id:"discord",     cat:"comunidad", name:"Discord",     dur:2, energy:-10 },
+  { id:"directo",     cat:"comunidad", name:"Directo",     dur:4, energy:-30, strong:true },
+  { id:"reu_equipo",  cat:"comunidad", name:"Reuniones equipo", dur:2, energy:-15 },
+  { id:"prod_com",    cat:"comunidad", name:"Producto",    dur:4, energy:-25, strong:true },
+  { id:"gym",         cat:"salud",     name:"Gym",         dur:2, energy:+20 },
+  { id:"bici",        cat:"salud",     name:"Bici",        dur:4, energy:+25 },
+  { id:"bosque",      cat:"salud",     name:"Bosque",      dur:4, energy:+30 },
+  { id:"paseo",       cat:"salud",     name:"Paseo",       dur:2, energy:+10 },
+  { id:"meditacion",  cat:"salud",     name:"Meditación",  dur:2, energy:+15 },
+  { id:"descanso",    cat:"salud",     name:"Descanso",    dur:2, energy:+25 },
+  { id:"siesta",      cat:"salud",     name:"Siesta",      dur:1, energy:+15 },
+  { id:"sueno",       cat:"salud",     name:"Sueño",       dur:2, energy:+10 },
+  { id:"pareja",      cat:"vida",      name:"Pareja",      dur:4, energy:+15 },
+  { id:"familia",     cat:"vida",      name:"Familia",     dur:4, energy:+15 },
+  { id:"libre",       cat:"vida",      name:"Tiempo libre",dur:4, energy:+15 },
+  { id:"desconexion", cat:"vida",      name:"Desconexión", dur:8, energy:+40 },
+  { id:"dia_libre",   cat:"vida",      name:"Día libre",   dur:28, energy:+100 },
+  { id:"custom",      cat:"custom",    name:"Personalizado", dur:2, energy:0, custom:true },
+];
+
+const HOUR_START = 5;
+const HOUR_END   = 24;
+const HOURS = HOUR_END - HOUR_START;
+const SLOTS_PER_HOUR = 2;            // 30-min granularity
+const TOTAL_SLOTS = HOURS * SLOTS_PER_HOUR;
+const SLOT_H = 22;
+const SCROLL_TO_HOUR = 6;
+const DAYS = ["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"];
+
+/* ========================= STATE ========================= */
+
+const STORAGE_KEY = "dashboardSemanal.v2";
+
+function loadState(){
+  let s;
+  try { s = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch {}
+  if(!s) s = { weeks:{}, anchor:weekKey(new Date()), templates:[], theme:"light", version:3 };
+  return migrate(s);
+}
+function migrate(s){
+  if(s.version === 3) return s;
+  // pre-v3: b.hour (absolute, 0-23) and b.dur in hours → b.slot (rel to HOUR_START) and b.dur in 30-min slots
+  const conv = (b)=>{
+    if(typeof b.slot === "number") return b;
+    const hour = (typeof b.hour === "number") ? b.hour : 6;
+    return {
+      ...(b.uid?{uid:b.uid}:{}),
+      typeId: b.typeId, day: b.day,
+      slot: Math.max(0, Math.min(TOTAL_SLOTS-1, Math.round((hour - HOUR_START) * SLOTS_PER_HOUR))),
+      dur:  Math.max(1, (b.dur || 1) * SLOTS_PER_HOUR),
+      name: b.name, energy: b.energy,
+    };
+  };
+  for(const k in (s.weeks||{})) s.weeks[k].blocks = (s.weeks[k].blocks||[]).map(conv);
+  (s.templates||[]).forEach(t => t.blocks = (t.blocks||[]).map(conv));
+  s.version = 3;
+  return s;
+}
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+function startOfWeek(d){
+  const x = new Date(d);
+  const day = (x.getDay()+6)%7;
+  x.setHours(0,0,0,0); x.setDate(x.getDate()-day);
+  return x;
+}
+function weekKey(d){
+  const s = startOfWeek(d);
+  return `${s.getFullYear()}-${String(s.getMonth()+1).padStart(2,'0')}-${String(s.getDate()).padStart(2,'0')}`;
+}
+function fmt(d){ return d.toLocaleDateString('es-ES',{day:'numeric',month:'short'}); }
+
+const state = loadState();
+if(!state.templates) state.templates = [];
+if(!state.theme) state.theme = "light";
+let viewMonday = startOfWeek(new Date(state.anchor));
+
+function currentWeek(){
+  const k = weekKey(viewMonday);
+  if(!state.weeks[k]) state.weeks[k] = { blocks:[] };
+  return state.weeks[k];
+}
+
+function blockDur(b){
+  if(typeof b.dur === "number") return b.dur;
+  const t = BLOCK_TYPES.find(x=>x.id===b.typeId);
+  return t ? t.dur : 1;
+}
+function blockName(b){
+  if(b.name) return b.name;
+  const t = BLOCK_TYPES.find(x=>x.id===b.typeId);
+  return t ? t.name : "Bloque";
+}
+function blockEnergy(b){
+  const t = BLOCK_TYPES.find(x=>x.id===b.typeId);
+  if(!t) return 0;
+  const base = (typeof b.energy === "number") ? b.energy : t.energy;
+  const refDur = t.custom ? SLOTS_PER_HOUR : t.dur;  // custom = energy per hour
+  return Math.round(base * (blockDur(b) / refDur));
+}
+function slotToTime(slot){
+  const m = HOUR_START*60 + slot*30;
+  return String(Math.floor(m/60)).padStart(2,'0')+":"+String(m%60).padStart(2,'0');
+}
+function fmtDur(slots){
+  const h = slots / SLOTS_PER_HOUR;
+  if(h < 1) return (slots*30) + "min";
+  return (Number.isInteger(h) ? h : h.toFixed(1)) + "h";
+}
+function durHours(slots){ return slots / SLOTS_PER_HOUR; }
+
+/* ========================= THEME ========================= */
+
+function applyTheme(){
+  document.documentElement.dataset.theme = state.theme;
+  document.getElementById("themeBtn").textContent = state.theme==="dark" ? "☀️" : "🌙";
+}
+
+/* ========================= PALETTE ========================= */
+
+function renderPalette(){
+  for(const cat of Object.keys(CATEGORIES)){
+    const el = document.getElementById("cat-"+cat);
+    el.innerHTML = "";
+    BLOCK_TYPES.filter(b=>b.cat===cat).forEach(b=>{
+      const chip = document.createElement("div");
+      chip.className="chip";
+      chip.style.setProperty("--c",CATEGORIES[cat].color);
+      const sign = b.custom ? "edit" : (b.energy>0?`+${b.energy}`:`${b.energy}`);
+      chip.innerHTML = `<span class="dot"></span>${b.name}<span class="e">${sign}</span>`;
+      chip.draggable = true;
+      chip.addEventListener("dragstart",ev=>{
+        ev.dataTransfer.setData("application/x-new", b.id);
+        ev.dataTransfer.effectAllowed = "copy";
+      });
+      el.appendChild(chip);
+    });
+  }
+}
+
+/* ========================= GRID ========================= */
+
+const grid = document.getElementById("grid");
+
+function renderGrid(){
+  grid.innerHTML = "";
+  grid.style.gridTemplateRows = "auto 1fr";
+  grid.style.gridTemplateColumns = `56px repeat(7, 1fr)`;
+
+  // header
+  const c0 = document.createElement("div"); c0.className="head-cell"; grid.appendChild(c0);
+  const monday = new Date(viewMonday);
+  for(let i=0;i<7;i++){
+    const date = new Date(monday); date.setDate(monday.getDate()+i);
+    const cell = document.createElement("div");
+    cell.className="head-cell";
+    cell.innerHTML = `
+      <div class="dow">${DAYS[i]} · ${date.getDate()}</div>
+      <div class="energy"><span class="pill gray" data-energy-pill="${i}">100%</span></div>`;
+    grid.appendChild(cell);
+  }
+
+  // hour column
+  const hourCol = document.createElement("div");
+  hourCol.style.display="grid";
+  hourCol.style.gridTemplateRows=`repeat(${TOTAL_SLOTS}, ${SLOT_H}px)`;
+  for(let s=0;s<TOTAL_SLOTS;s++){
+    const hr = document.createElement("div");
+    const half = (s % SLOTS_PER_HOUR) !== 0;
+    hr.className = "hour" + (half ? " half" : "");
+    hr.textContent = half ? "" : slotToTime(s);
+    hourCol.appendChild(hr);
+  }
+  grid.appendChild(hourCol);
+
+  // day columns
+  for(let i=0;i<7;i++){
+    const day = document.createElement("div");
+    day.className="day";
+    day.style.gridTemplateRows=`repeat(${TOTAL_SLOTS}, ${SLOT_H}px)`;
+    day.dataset.dayIndex = i;
+
+    for(let s=0;s<TOTAL_SLOTS;s++){
+      const slot = document.createElement("div");
+      const half = (s % SLOTS_PER_HOUR) !== 0;
+      slot.className = "slot" + (half ? " half" : "");
+      slot.dataset.dayIndex = i;
+      slot.dataset.slot = s;
+      slot.addEventListener("dragover", e=>{ e.preventDefault(); slot.classList.add("drop"); });
+      slot.addEventListener("dragleave", ()=> slot.classList.remove("drop"));
+      slot.addEventListener("drop", e=>{
+        e.preventDefault();
+        slot.classList.remove("drop");
+        const newId = e.dataTransfer.getData("application/x-new");
+        const moveUid = e.dataTransfer.getData("application/x-move");
+        if(newId){
+          const t = BLOCK_TYPES.find(b=>b.id===newId); if(!t) return;
+          const nb = {
+            uid: cryptoRandom(),
+            typeId: newId,
+            day: i,
+            slot: s,
+            dur: t.dur,
+          };
+          if(t.custom){
+            const name = prompt("Nombre del bloque:", "");
+            if(name===null) return;
+            const eStr = prompt("Energía por hora (ej. -15, +10):", "-10");
+            if(eStr===null) return;
+            const eNum = parseInt(eStr,10);
+            if(isNaN(eNum)){ alert("Energía inválida"); return; }
+            nb.name = name.trim() || "Personalizado";
+            nb.energy = eNum;
+          }
+          currentWeek().blocks.push(nb);
+        } else if(moveUid){
+          const b = currentWeek().blocks.find(b=>b.uid===moveUid);
+          if(b){ b.day = i; b.slot = s; }
+        }
+        saveState(); renderAll();
+      });
+      day.appendChild(slot);
+    }
+
+    grid.appendChild(day);
+  }
+
+  // "now" line on today's column
+  const today = new Date();
+  const mondayMid = new Date(monday); mondayMid.setHours(0,0,0,0);
+  const todayMid = new Date(today); todayMid.setHours(0,0,0,0);
+  const dayDiff = Math.round((todayMid - mondayMid) / 86400000);
+  if(dayDiff >= 0 && dayDiff < 7){
+    const dayColsAll = grid.querySelectorAll(".day");
+    const todayCol = dayColsAll[dayDiff];
+    const hourNow = today.getHours() + today.getMinutes()/60;
+    if(todayCol && hourNow >= HOUR_START && hourNow < HOUR_END){
+      const line = document.createElement("div");
+      line.className = "now-line";
+      line.style.top = ((hourNow - HOUR_START) * SLOTS_PER_HOUR * SLOT_H) + "px";
+      todayCol.appendChild(line);
+    }
+  }
+
+  // overlap detection
+  const overlapUids = new Set();
+  const byDay = {};
+  currentWeek().blocks.forEach(b=>{ (byDay[b.day] ||= []).push(b); });
+  Object.values(byDay).forEach(arr=>{
+    for(let i=0;i<arr.length;i++){
+      for(let j=i+1;j<arr.length;j++){
+        const a=arr[i], c=arr[j];
+        const aE=a.slot+blockDur(a), cE=c.slot+blockDur(c);
+        if(a.slot < cE && c.slot < aE){ overlapUids.add(a.uid); overlapUids.add(c.uid); }
+      }
+    }
+  });
+
+  // place blocks
+  const dayCols = grid.querySelectorAll(".day");
+  currentWeek().blocks.forEach(b=>{
+    const t = BLOCK_TYPES.find(x=>x.id===b.typeId); if(!t) return;
+    const col = dayCols[b.day]; if(!col) return;
+    const startRow = b.slot;
+    const dur = blockDur(b);
+    const name = blockName(b);
+    const totalE = blockEnergy(b);
+    const sign = totalE>0?`+${totalE}`:`${totalE}`;
+    const el = document.createElement("div");
+    el.className = "block" + (overlapUids.has(b.uid) ? " overlap" : "") + (dur <= 1 ? " short" : "");
+    el.style.background = CATEGORIES[t.cat].color;
+    if(overlapUids.has(b.uid)) el.title = "⚠ Este bloque se solapa con otro";
+    el.style.gridRow = `${startRow+1} / span ${dur}`;
+    el.innerHTML = `
+      <div class="b-name"><span class="bn-text"${t.custom?' title="Click para editar nombre" style="cursor:text;text-decoration:underline dotted;text-underline-offset:2px"':''}>${escapeHtml(name)}</span><button class="x" title="Borrar">×</button></div>
+      <div class="b-meta">${slotToTime(b.slot)} · ${fmtDur(dur)} · <span class="be-text"${t.custom?' title="Click para editar %" style="cursor:text;text-decoration:underline dotted;text-underline-offset:2px"':''}>${sign}</span></div>
+      <div class="resize" title="Arrastra para cambiar duración"></div>`;
+    if(t.custom){
+      el.querySelector(".bn-text").addEventListener("click", e=>{
+        e.stopPropagation();
+        const v = prompt("Nuevo nombre:", name);
+        if(v!==null){ b.name = v.trim() || name; saveState(); renderAll(); }
+      });
+      el.querySelector(".be-text").addEventListener("click", e=>{
+        e.stopPropagation();
+        const v = prompt("Energía por hora (ej. -15, +10):", String(b.energy ?? 0));
+        if(v===null) return;
+        const n = parseInt(v,10);
+        if(isNaN(n)){ alert("Energía inválida"); return; }
+        b.energy = n; saveState(); renderAll();
+      });
+    }
+    el.draggable = true;
+    el.addEventListener("dragstart", e=>{
+      e.dataTransfer.setData("application/x-move", b.uid);
+      e.dataTransfer.effectAllowed = "move";
+    });
+    el.querySelector(".x").addEventListener("click",(e)=>{
+      e.stopPropagation();
+      currentWeek().blocks = currentWeek().blocks.filter(x=>x.uid!==b.uid);
+      saveState(); renderAll();
+    });
+    // resize handle
+    const handle = el.querySelector(".resize");
+    handle.addEventListener("mousedown", (ev)=>{
+      ev.preventDefault(); ev.stopPropagation();
+      el.draggable = false;
+      const startY = ev.clientY;
+      const startDur = blockDur(b);
+      const maxDur = TOTAL_SLOTS - b.slot;
+      const onMove = (e)=>{
+        const delta = Math.round((e.clientY - startY) / SLOT_H);
+        const newDur = Math.max(1, Math.min(maxDur, startDur + delta));
+        if(newDur !== blockDur(b)){
+          b.dur = newDur;
+          renderAll();
+        }
+      };
+      const onUp = ()=>{
+        document.removeEventListener("mousemove", onMove);
+        document.removeEventListener("mouseup", onUp);
+        el.draggable = true;
+        saveState();
+      };
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    });
+    col.appendChild(el);
+  });
+
+  const sun = new Date(monday); sun.setDate(monday.getDate()+6);
+  document.getElementById("weekRange").textContent = `${fmt(monday)} – ${fmt(sun)}`;
+}
+
+function cryptoRandom(){
+  if(crypto && crypto.randomUUID) return crypto.randomUUID();
+  return "id"+Math.random().toString(36).slice(2)+Date.now().toString(36);
+}
+
+/* ========================= STATS ========================= */
+
+function dayEnergy(dayIdx){
+  let e = 100; let strong = 0;
+  currentWeek().blocks.filter(b=>b.day===dayIdx).forEach(b=>{
+    const t = BLOCK_TYPES.find(x=>x.id===b.typeId); if(!t) return;
+    e += blockEnergy(b);
+    if(t.strong) strong++;
+  });
+  return { energy: Math.round(Math.max(0, Math.min(150, e))), strong };
+}
+
+function energyClass(e, strong){
+  if(e <= 30 || strong >= 3) return "red";
+  if(e <= 60 || strong >= 2) return "yellow";
+  return "green";
+}
+
+function renderStats(){
+  const w = currentWeek();
+  let totals = { trading:0, negocio:0, salud:0, vida:0, comunidad:0 };
+  let energies = []; let strongs = 0;
+
+  for(let i=0;i<7;i++){
+    const {energy, strong} = dayEnergy(i);
+    energies.push(energy); strongs += strong;
+    const pill = document.querySelector(`[data-energy-pill="${i}"]`);
+    if(pill){
+      pill.className = `pill ${energyClass(energy, strong)}`;
+      pill.textContent = `${energy}%`;
+    }
+  }
+  w.blocks.forEach(b=>{
+    const t = BLOCK_TYPES.find(x=>x.id===b.typeId); if(!t) return;
+    totals[t.cat] = (totals[t.cat]||0) + blockDur(b);
+  });
+
+  document.getElementById("stEnergy").textContent  = Math.round(energies.reduce((a,b)=>a+b,0)/7) + "%";
+  document.getElementById("stTrading").textContent = fmtDur(totals.trading);
+  document.getElementById("stNegocio").textContent = fmtDur(totals.negocio);
+  document.getElementById("stSalud").textContent   = fmtDur(totals.salud);
+  document.getElementById("stVida").textContent    = fmtDur(totals.vida);
+  document.getElementById("stStrong").textContent  = strongs;
+
+  const dc = document.getElementById("dayChips");
+  dc.innerHTML = "";
+  for(let i=0;i<7;i++){
+    const {energy, strong} = dayEnergy(i);
+    const cls = energyClass(energy, strong);
+    const c = document.createElement("div");
+    c.className = "dchip";
+    c.style.background = cls==="green"?"var(--green)":cls==="yellow"?"var(--yellow)":"var(--red)";
+    c.textContent = DAYS[i];
+    c.title = `${energy}% · ${strong} fuerte(s)`;
+    dc.appendChild(c);
+  }
+}
+
+/* ========================= TEMPLATES ========================= */
+
+function renderTemplates(){
+  const list = document.getElementById("tplList");
+  list.innerHTML = "";
+  if(!state.templates.length){
+    list.innerHTML = `<div class="quote" style="padding:10px;text-align:center">Sin plantillas guardadas todavía</div>`;
+    return;
+  }
+  state.templates.forEach((tpl, idx)=>{
+    const row = document.createElement("div");
+    row.className="tpl";
+    row.innerHTML = `
+      <div>
+        <div class="name">${escapeHtml(tpl.name)}</div>
+        <div class="meta">${tpl.blocks.length} bloques</div>
+      </div>
+      <div class="actions">
+        <button class="apply">Aplicar</button>
+        <button class="del" title="Borrar">×</button>
+      </div>`;
+    row.querySelector(".apply").onclick = ()=> applyTemplate(idx);
+    row.querySelector(".del").onclick = ()=>{
+      if(confirm(`¿Borrar plantilla "${tpl.name}"?`)){
+        state.templates.splice(idx,1); saveState(); renderTemplates();
+      }
+    };
+    list.appendChild(row);
+  });
+}
+
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function saveCurrentAsTemplate(){
+  const name = document.getElementById("tplName").value.trim();
+  if(!name){ alert("Pon un nombre a la plantilla"); return; }
+  const blocks = currentWeek().blocks.map(b=>({
+    typeId:b.typeId, day:b.day, hour:b.hour, dur:blockDur(b),
+    name:b.name, energy:b.energy
+  }));
+  if(!blocks.length){
+    if(!confirm("La semana actual está vacía. ¿Guardar una plantilla vacía?")) return;
+  }
+  state.templates.push({ name, blocks, created:Date.now() });
+  document.getElementById("tplName").value = "";
+  saveState(); renderTemplates();
+}
+
+function applyTemplate(idx){
+  const tpl = state.templates[idx]; if(!tpl) return;
+  const w = currentWeek();
+  if(w.blocks.length && !confirm(`Esto reemplazará los bloques actuales con "${tpl.name}". ¿Continuar?`)) return;
+  w.blocks = tpl.blocks.map(b=>({
+    uid: cryptoRandom(),
+    typeId: b.typeId, day: b.day, hour: b.hour, dur: b.dur,
+    name: b.name, energy: b.energy
+  }));
+  saveState(); renderAll();
+}
+
+/* ========================= ACTIONS ========================= */
+
+document.getElementById("prevWeek").onclick = ()=>{ viewMonday.setDate(viewMonday.getDate()-7); state.anchor = weekKey(viewMonday); saveState(); renderAll(); };
+document.getElementById("nextWeek").onclick = ()=>{ viewMonday.setDate(viewMonday.getDate()+7); state.anchor = weekKey(viewMonday); saveState(); renderAll(); };
+document.getElementById("todayBtn").onclick = ()=>{ viewMonday = startOfWeek(new Date()); state.anchor = weekKey(viewMonday); saveState(); renderAll(); };
+document.getElementById("clearWeek").onclick = ()=>{
+  if(confirm("¿Vaciar todos los bloques de esta semana?")){
+    currentWeek().blocks = []; saveState(); renderAll();
+  }
+};
+document.getElementById("themeBtn").onclick = ()=>{
+  state.theme = state.theme==="dark" ? "light" : "dark";
+  applyTheme(); saveState();
+};
+document.getElementById("saveTpl").onclick = saveCurrentAsTemplate;
+document.getElementById("tplName").addEventListener("keydown", e=>{
+  if(e.key==="Enter") saveCurrentAsTemplate();
+});
+
+const MOTIV = [
+  "Sostener años, no días.",
+  "Llega limpio a la sesión.",
+  "Menos cambios de contexto, mejor ejecución.",
+  "Descansar también es estrategia.",
+  "La calma es ventaja competitiva.",
+  "Lo que no planificas, te planifica.",
+  "Energía protegida = decisiones limpias.",
+  "El equilibrio es el sistema.",
+  "Ejecuta, no improvises.",
+  "Your future depends on what you do today.",
+  "Tu mejor trade es el que no haces cansado.",
+  "Proteger la claridad mental es trabajo, no pereza.",
+  "Hacer menos, mejor.",
+  "La consistencia gana a la intensidad.",
+];
+
+function renderMotiv(){
+  const box = document.getElementById("motivBox");
+  let phrase;
+  if(state.motivCustom){
+    phrase = state.motivCustom;
+  } else {
+    const day = Math.floor((new Date() - new Date(new Date().getFullYear(),0,0)) / 86400000);
+    phrase = MOTIV[day % MOTIV.length];
+  }
+  box.textContent = phrase;
+  box.title = "Click para editar · doble click para restaurar rotación";
+  box.style.cursor = "text";
+  box.onclick = ()=>{
+    const v = prompt("Frase motivacional (vacío = restaurar rotación diaria):", state.motivCustom || phrase);
+    if(v===null) return;
+    state.motivCustom = v.trim() || null;
+    saveState(); renderMotiv();
+  };
+  box.ondblclick = ()=>{
+    state.motivCustom = null; saveState(); renderMotiv();
+  };
+}
+
+function renderBalance(){
+  const totals = { trading:0, negocio:0, comunidad:0, salud:0, vida:0, custom:0 };
+  currentWeek().blocks.forEach(b=>{
+    const t = BLOCK_TYPES.find(x=>x.id===b.typeId); if(!t) return;
+    totals[t.cat] = (totals[t.cat]||0) + blockDur(b);
+  });
+  const sum = Object.values(totals).reduce((a,b)=>a+b,0);
+  const bar = document.getElementById("balanceBar");
+  const leg = document.getElementById("balanceLegend");
+  bar.innerHTML = ""; leg.innerHTML = "";
+  if(!sum){
+    bar.innerHTML = `<div style="flex:1;background:var(--line)"></div>`;
+    leg.innerHTML = `<span class="li" style="color:var(--muted)">sin bloques esta semana</span>`;
+    return;
+  }
+  for(const cat of Object.keys(totals)){
+    const h = totals[cat]; if(!h) continue;
+    const pct = Math.round((h/sum)*100);
+    const seg = document.createElement("div");
+    seg.style.width = pct + "%";
+    seg.style.background = CATEGORIES[cat].color;
+    seg.title = `${CATEGORIES[cat].label}: ${fmtDur(h)} (${pct}%)`;
+    bar.appendChild(seg);
+    const li = document.createElement("span");
+    li.className = "li";
+    li.innerHTML = `<span class="d" style="background:${CATEGORIES[cat].color}"></span>${CATEGORIES[cat].label} ${pct}%`;
+    leg.appendChild(li);
+  }
+}
+
+function renderAll(){ renderGrid(); renderStats(); renderBalance(); }
+
+applyTheme();
+renderPalette();
+renderTemplates();
+renderMotiv();
+renderAll();
+document.querySelector(".grid-wrap").scrollTop = (SCROLL_TO_HOUR - HOUR_START) * SLOTS_PER_HOUR * SLOT_H;
+setInterval(()=>{ renderGrid(); }, 60000);
+</script>
+</body>
+</html>
