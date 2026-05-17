@@ -191,6 +191,7 @@
   @media print{
     @page{ size:A4 landscape; margin:8mm }
     body{ background:#fff !important; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+    *{ transition:none !important; animation:none !important }
     .sidebar, .right{ display:none !important }
     .app{ display:block; padding:0 }
     .center{ height:auto; overflow:visible; box-shadow:none; border-radius:0; padding:6px }
@@ -847,7 +848,17 @@ document.getElementById("clearWeek").onclick = ()=>{
     currentWeek().blocks = []; saveState(); renderAll();
   }
 };
-document.getElementById("printBtn").onclick = ()=>{ window.print(); };
+document.getElementById("printBtn").onclick = ()=>{
+  document.body.style.transition = "none";
+  document.querySelectorAll(".block").forEach(el=> el.style.animation = "none");
+  requestAnimationFrame(()=> requestAnimationFrame(()=>{
+    window.print();
+    setTimeout(()=>{
+      document.body.style.transition = "";
+      document.querySelectorAll(".block").forEach(el=> el.style.animation = "");
+    }, 500);
+  }));
+};
 document.getElementById("themeBtn").onclick = ()=>{
   state.theme = state.theme==="dark" ? "light" : "dark";
   applyTheme(); saveState();
