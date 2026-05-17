@@ -843,12 +843,50 @@ const MOTIV = [
   "Energía protegida = decisiones limpias.",
   "El equilibrio es el sistema.",
   "Ejecuta, no improvises.",
-  "Your future depends on what you do today.",
+  "Tu futuro depende de lo que haces hoy.",
   "Tu mejor trade es el que no haces cansado.",
   "Proteger la claridad mental es trabajo, no pereza.",
   "Hacer menos, mejor.",
   "La consistencia gana a la intensidad.",
+  "Disciplina es libertad.",
+  "Despacio y suave, suave y rápido.",
+  "El mercado paga la paciencia, no la prisa.",
+  "El interés compuesto es la octava maravilla del mundo.",
+  "No improvises lo que puedes preparar.",
+  "Decisiones limpias requieren mente limpia.",
+  "Pequeños pasos consistentes ganan.",
+  "Aparece, aunque no te apetezca.",
+  "El que mejor descansa, mejor rinde.",
+  "El foco es un superpoder.",
+  "Cada 'no' a algo es un 'sí' a algo más importante.",
+  "Lo que haces a diario importa más que lo que haces a veces.",
+  "El cuerpo soporta lo que la mente cuida.",
+  "Mejor un día perfecto que siete a medias.",
+  "La preparación es el 90% del éxito.",
+  "Dormir mejora el rendimiento.",
+  "El mejor trader es el más paciente.",
+  "Tu salud es tu capital más rentable.",
+  "Hazlo simple. La simplicidad escala.",
+  "Gestiona la energía, no el tiempo.",
+  "Lo difícil hoy, fácil mañana.",
+  "Hay que rendir, no aparentar.",
+  "Las semanas suman, los años multiplican.",
+  "Menos pero mejor.",
+  "Opera menos, piensa más.",
+  "Tu yo de mañana te lo agradecerá.",
+  "La paciencia es una posición.",
+  "No rompas la cadena.",
+  "El proceso, no el resultado.",
+  "Acepta el aburrimiento.",
+  "Si tienes prisa, vístete despacio.",
+  "Calidad de repeticiones, no cantidad.",
+  "El descanso no se compensa, se reserva.",
+  "Gana la mañana, gana el día.",
+  "La intensidad cansa, la consistencia construye.",
+  "No confundas actividad con progreso.",
 ];
+
+const _sessionMotiv = MOTIV[Math.floor(Math.random() * MOTIV.length)];
 
 function renderMotiv(){
   const box = document.getElementById("motivBox");
@@ -856,8 +894,7 @@ function renderMotiv(){
   if(state.motivCustom){
     phrase = state.motivCustom;
   } else {
-    const day = Math.floor((new Date() - new Date(new Date().getFullYear(),0,0)) / 86400000);
-    phrase = MOTIV[day % MOTIV.length];
+    phrase = _sessionMotiv;
   }
   box.textContent = phrase;
   box.title = "Click para editar · doble click para restaurar rotación";
