@@ -116,7 +116,7 @@
     border-left:3px solid rgba(0,0,0,.18)}
   .block:active{cursor:grabbing}
   .block .b-name{display:flex;justify-content:space-between;align-items:center;gap:6px}
-  .block .b-name span{font-size:13px;font-weight:600}
+  .block .b-name span{font-size:13px;font-weight:600;line-height:1.2}
   .block .b-meta{font-size:10px;opacity:.85;font-weight:400}
   .block .x{opacity:0;font-size:14px;line-height:1;padding:0 2px;border-radius:4px;color:#fff}
   .block:hover .x{opacity:.9}
@@ -438,6 +438,15 @@ function blockEnergy(b){
   const scale = base >= 0 ? Math.sqrt(ratio) : ratio;
   return Math.round(base * scale);
 }
+function blockFontSize(dur){
+  if(dur <= 1) return { name:11, meta:0   };
+  if(dur <= 2) return { name:12, meta:9   };
+  if(dur <= 4) return { name:13, meta:10  };
+  if(dur <= 6) return { name:14, meta:10  };
+  if(dur <= 8) return { name:15, meta:11  };
+  return               { name:16, meta:11 };
+}
+
 function slotToTime(slot){
   const m = HOUR_START*60 + slot*30;
   return String(Math.floor(m/60)).padStart(2,'0')+":"+String(m%60).padStart(2,'0');
@@ -658,6 +667,13 @@ function renderGrid(){
       <div class="b-name"><span class="bn-text"${t.custom?' title="Click para editar nombre" style="cursor:text;text-decoration:underline dotted;text-underline-offset:2px"':''}>${escapeHtml(name)}</span><button class="x" title="Borrar">×</button></div>
       <div class="b-meta">${slotToTime(b.slot)} · ${fmtDur(dur)} · <span class="be-text"${t.custom?' title="Click para editar %" style="cursor:text;text-decoration:underline dotted;text-underline-offset:2px"':''}>${sign}</span></div>
       <div class="resize" title="Arrastra para cambiar duración"></div>`;
+    // dynamic font scaling by block height
+    const fs = blockFontSize(dur);
+    const nameEl = el.querySelector(".bn-text");
+    const metaEl = el.querySelector(".b-meta");
+    if(nameEl) nameEl.style.fontSize = fs.name + "px";
+    if(metaEl && fs.meta) metaEl.style.fontSize = fs.meta + "px";
+
     if(t.custom){
       el.querySelector(".bn-text").addEventListener("click", e=>{
         e.stopPropagation();
