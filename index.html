@@ -124,6 +124,9 @@
   .block:hover .resize{opacity:.6}
   .block .resize::before{content:"";width:24px;height:3px;border-radius:2px;background:rgba(255,255,255,.7)}
 
+  .drop-preview{position:absolute;left:4px;right:4px;border-radius:8px;
+    background:rgba(59,130,246,.15);border:2px dashed rgba(59,130,246,.7);
+    pointer-events:none;z-index:2;box-sizing:border-box}
   .block.short{padding:2px 8px;font-size:11px}
   .block.short .b-meta{display:none}
   .block.short .b-name{font-size:10.5px}
@@ -305,7 +308,7 @@ const CATEGORIES = {
 const BLOCK_TYPES = [
   { id:"londres",     cat:"trading",   name:"Londres",     dur:4, energy:-20 },
   { id:"nasdaq",      cat:"trading",   name:"Nasdaq",      dur:4, energy:-25 },
-  { id:"journaling",  cat:"trading",   name:"Journaling",  dur:2, energy:-5  },
+  { id:"backtesting", cat:"trading",   name:"Backtesting", dur:2, energy:-15 },
   { id:"revision",    cat:"trading",   name:"Revisión",    dur:2, energy:-5  },
   { id:"grabacion",   cat:"negocio",   name:"Grabación",   dur:4, energy:-30, strong:true },
   { id:"desarrollo",  cat:"negocio",   name:"Desarrollo",  dur:4, energy:-35, strong:true },
@@ -446,7 +449,9 @@ function renderPalette(){
       chip.addEventListener("dragstart",ev=>{
         ev.dataTransfer.setData("application/x-new", b.id);
         ev.dataTransfer.effectAllowed = "copy";
+        dragInfo = { kind:"new", dur: b.dur };
       });
+      chip.addEventListener("dragend", ()=>{ dragInfo = null; clearDropPreview(); });
       el.appendChild(chip);
     });
   }
@@ -455,6 +460,23 @@ function renderPalette(){
 /* ========================= GRID ========================= */
 
 const grid = document.getElementById("grid");
+
+let dragInfo = null;
+let dropPreviewEl = null;
+
+function clearDropPreview(){
+  if(dropPreviewEl){ dropPreviewEl.remove(); dropPreviewEl = null; }
+}
+function showDropPreview(day, startSlot, dur){
+  clearDropPreview();
+  const maxStart = Math.max(0, TOTAL_SLOTS - dur);
+  const clamped = Math.max(0, Math.min(maxStart, startSlot));
+  dropPreviewEl = document.createElement("div");
+  dropPreviewEl.className = "drop-preview";
+  dropPreviewEl.style.top = (clamped * SLOT_H + 2) + "px";
+  dropPreviewEl.style.height = (dur * SLOT_H - 4) + "px";
+  day.appendChild(dropPreviewEl);
+}
 
 function renderGrid(){
   grid.innerHTML = "";
@@ -508,24 +530,24 @@ function renderGrid(){
       const y = e.clientY - rect.top;
       return Math.max(0, Math.min(TOTAL_SLOTS-1, Math.floor(y / SLOT_H)));
     };
-    const highlightSlot = (s)=>{
-      day.querySelectorAll(".slot.drop").forEach(el=>el.classList.remove("drop"));
-      const sl = day.children[s];
-      if(sl && sl.classList.contains("slot")) sl.classList.add("drop");
-    };
     day.addEventListener("dragover", e=>{
       e.preventDefault();
-      highlightSlot(targetSlotFromEvent(e));
+      const startSlot = targetSlotFromEvent(e);
+      const dur = (dragInfo && dragInfo.dur) || 1;
+      showDropPreview(day, startSlot, dur);
     });
     day.addEventListener("dragleave", e=>{
       if(!day.contains(e.relatedTarget)){
-        day.querySelectorAll(".slot.drop").forEach(el=>el.classList.remove("drop"));
+        clearDropPreview();
       }
     });
     day.addEventListener("drop", e=>{
       e.preventDefault();
-      day.querySelectorAll(".slot.drop").forEach(el=>el.classList.remove("drop"));
-      const targetSlot = targetSlotFromEvent(e);
+      clearDropPreview();
+      const rawSlot = targetSlotFromEvent(e);
+      const dur = (dragInfo && dragInfo.dur) || 1;
+      const targetSlot = Math.max(0, Math.min(TOTAL_SLOTS - dur, rawSlot));
+      dragInfo = null;
       const newId = e.dataTransfer.getData("application/x-new");
       const moveUid = e.dataTransfer.getData("application/x-move");
       if(newId){
@@ -627,7 +649,9 @@ function renderGrid(){
     el.addEventListener("dragstart", e=>{
       e.dataTransfer.setData("application/x-move", b.uid);
       e.dataTransfer.effectAllowed = "move";
+      dragInfo = { kind:"move", dur: blockDur(b) };
     });
+    el.addEventListener("dragend", ()=>{ dragInfo = null; clearDropPreview(); });
     el.querySelector(".x").addEventListener("click",(e)=>{
       e.stopPropagation();
       currentWeek().blocks = currentWeek().blocks.filter(x=>x.uid!==b.uid);
