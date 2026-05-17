@@ -187,6 +187,26 @@
   ::-webkit-scrollbar{width:8px;height:8px}
   ::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
   ::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+
+  @media print{
+    @page{ size:A4 landscape; margin:8mm }
+    body{ background:#fff !important; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+    .sidebar, .right{ display:none !important }
+    .app{ display:block; padding:0 }
+    .center{ height:auto; overflow:visible; box-shadow:none; border-radius:0; padding:6px }
+    .grid-wrap{ overflow:visible; border:none; height:auto }
+    .grid{ min-width:unset }
+    .toolbar .actions{ display:none !important }
+    .toolbar .title{ font-size:13px }
+    .toolbar .sub{ font-size:11px }
+    .block .x, .block .resize{ display:none !important }
+    .head-cell{ background:#fff !important }
+    .slot{ height:18px !important }
+    .hour{ height:18px !important; line-height:17px }
+    .block{ font-size:9px !important; padding:2px 5px !important }
+    .block .b-meta{ font-size:8px !important }
+    .now-line{ display:none }
+  }
 </style>
 </head>
 <body>
@@ -238,6 +258,7 @@
         <span class="sub" id="weekRange"></span>
       </div>
       <div class="actions">
+        <button class="btn icon" id="printBtn" title="Imprimir semana">🖨️</button>
         <button class="btn icon" id="themeBtn" title="Cambiar tema">🌙</button>
         <button class="btn" id="prevWeek">‹</button>
         <button class="btn" id="todayBtn">Hoy</button>
@@ -826,6 +847,7 @@ document.getElementById("clearWeek").onclick = ()=>{
     currentWeek().blocks = []; saveState(); renderAll();
   }
 };
+document.getElementById("printBtn").onclick = ()=>{ window.print(); };
 document.getElementById("themeBtn").onclick = ()=>{
   state.theme = state.theme==="dark" ? "light" : "dark";
   applyTheme(); saveState();
