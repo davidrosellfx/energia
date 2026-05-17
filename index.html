@@ -313,24 +313,24 @@ const BLOCK_TYPES = [
   { id:"producto",    cat:"negocio",   name:"Producto",    dur:4, energy:-35, strong:true },
   { id:"grabacion",   cat:"negocio",   name:"Grabación",   dur:4, energy:-30, strong:true },
   { id:"reuniones",   cat:"negocio",   name:"Reuniones",   dur:2, energy:-15 },
-  { id:"financiero",  cat:"negocio",   name:"Financiero",  dur:2, energy:-20 },
+  { id:"financiero",  cat:"negocio",   name:"Financiero",  dur:2, energy:-15 },
   { id:"admin",       cat:"negocio",   name:"Admin",       dur:2, energy:-10 },
   { id:"discord",     cat:"comunidad", name:"Discord",     dur:2, energy:-10 },
   { id:"directo",     cat:"comunidad", name:"Directo",     dur:4, energy:-30, strong:true },
   { id:"reu_equipo",  cat:"comunidad", name:"Reuniones equipo", dur:2, energy:-15 },
   { id:"onboarding",  cat:"comunidad", name:"On-boarding", dur:2, energy:-20 },
-  { id:"gym",         cat:"salud",     name:"Gym",         dur:2, energy:+20 },
-  { id:"bici",        cat:"salud",     name:"Bici",        dur:4, energy:+25 },
-  { id:"bosque",      cat:"salud",     name:"Bosque",      dur:4, energy:+30 },
-  { id:"paseo",       cat:"salud",     name:"Paseo",       dur:2, energy:+10 },
-  { id:"meditacion",  cat:"salud",     name:"Meditación",  dur:2, energy:+15 },
-  { id:"descanso",    cat:"salud",     name:"Descanso",    dur:2, energy:+25 },
-  { id:"siesta",      cat:"salud",     name:"Siesta",      dur:1, energy:+15 },
-  { id:"lectura",     cat:"salud",     name:"Lectura",     dur:2, energy:+15 },
-  { id:"familia",     cat:"vida",      name:"Familia",     dur:4, energy:+15 },
-  { id:"amigos",      cat:"vida",      name:"Amigos",      dur:4, energy:+15 },
-  { id:"hobby",       cat:"vida",      name:"Hobby",       dur:4, energy:+20 },
-  { id:"libre",       cat:"vida",      name:"Tiempo libre",dur:4, energy:+15 },
+  { id:"gym",         cat:"salud",     name:"Gym",         dur:2, energy:+12 },
+  { id:"bici",        cat:"salud",     name:"Bici",        dur:4, energy:+18 },
+  { id:"bosque",      cat:"salud",     name:"Bosque",      dur:4, energy:+20 },
+  { id:"paseo",       cat:"salud",     name:"Paseo",       dur:2, energy:+8  },
+  { id:"meditacion",  cat:"salud",     name:"Meditación",  dur:2, energy:+8  },
+  { id:"descanso",    cat:"salud",     name:"Descanso",    dur:2, energy:+15 },
+  { id:"siesta",      cat:"salud",     name:"Siesta",      dur:1, energy:+10 },
+  { id:"lectura",     cat:"salud",     name:"Lectura",     dur:2, energy:+8  },
+  { id:"familia",     cat:"vida",      name:"Familia",     dur:4, energy:+12 },
+  { id:"amigos",      cat:"vida",      name:"Amigos",      dur:4, energy:+10 },
+  { id:"hobby",       cat:"vida",      name:"Hobby",       dur:4, energy:+15 },
+  { id:"libre",       cat:"vida",      name:"Tiempo libre",dur:4, energy:+10 },
   { id:"custom",      cat:"custom",    name:"Personalizado", dur:2, energy:0, custom:true },
 ];
 
@@ -411,8 +411,11 @@ function blockEnergy(b){
   const t = BLOCK_TYPES.find(x=>x.id===b.typeId);
   if(!t) return 0;
   const base = (typeof b.energy === "number") ? b.energy : t.energy;
-  const refDur = t.custom ? SLOTS_PER_HOUR : t.dur;  // custom = energy per hour
-  return Math.round(base * (blockDur(b) / refDur));
+  const refDur = t.custom ? SLOTS_PER_HOUR : t.dur;
+  const ratio = blockDur(b) / refDur;
+  // Consumo escala lineal; recarga tiene rendimientos decrecientes (√)
+  const scale = base >= 0 ? Math.sqrt(ratio) : ratio;
+  return Math.round(base * scale);
 }
 function slotToTime(slot){
   const m = HOUR_START*60 + slot*30;
