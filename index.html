@@ -596,6 +596,11 @@ function renderGrid(){
     }
   }
 
+  // purge orphaned blocks (type no longer exists)
+  currentWeek().blocks = currentWeek().blocks.filter(b=>
+    BLOCK_TYPES.some(t=>t.id===b.typeId)
+  );
+
   // overlap detection
   const overlapUids = new Set();
   const byDay = {};
