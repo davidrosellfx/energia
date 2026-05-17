@@ -498,43 +498,62 @@ function renderGrid(){
       const slot = document.createElement("div");
       const half = (s % SLOTS_PER_HOUR) !== 0;
       slot.className = "slot" + (half ? " half" : "");
-      slot.dataset.dayIndex = i;
       slot.dataset.slot = s;
-      slot.addEventListener("dragover", e=>{ e.preventDefault(); slot.classList.add("drop"); });
-      slot.addEventListener("dragleave", ()=> slot.classList.remove("drop"));
-      slot.addEventListener("drop", e=>{
-        e.preventDefault();
-        slot.classList.remove("drop");
-        const newId = e.dataTransfer.getData("application/x-new");
-        const moveUid = e.dataTransfer.getData("application/x-move");
-        if(newId){
-          const t = BLOCK_TYPES.find(b=>b.id===newId); if(!t) return;
-          const nb = {
-            uid: cryptoRandom(),
-            typeId: newId,
-            day: i,
-            slot: s,
-            dur: t.dur,
-          };
-          if(t.custom){
-            const name = prompt("Nombre del bloque:", "");
-            if(name===null) return;
-            const eStr = prompt("Energía por hora (ej. -15, +10):", "-10");
-            if(eStr===null) return;
-            const eNum = parseInt(eStr,10);
-            if(isNaN(eNum)){ alert("Energía inválida"); return; }
-            nb.name = name.trim() || "Personalizado";
-            nb.energy = eNum;
-          }
-          currentWeek().blocks.push(nb);
-        } else if(moveUid){
-          const b = currentWeek().blocks.find(b=>b.uid===moveUid);
-          if(b){ b.day = i; b.slot = s; }
-        }
-        saveState(); renderAll();
-      });
       day.appendChild(slot);
     }
+
+    // Single drop handler on the day — works even when blocks cover slots
+    const targetSlotFromEvent = (e)=>{
+      const rect = day.getBoundingClientRect();
+      const y = e.clientY - rect.top;
+      return Math.max(0, Math.min(TOTAL_SLOTS-1, Math.floor(y / SLOT_H)));
+    };
+    const highlightSlot = (s)=>{
+      day.querySelectorAll(".slot.drop").forEach(el=>el.classList.remove("drop"));
+      const sl = day.children[s];
+      if(sl && sl.classList.contains("slot")) sl.classList.add("drop");
+    };
+    day.addEventListener("dragover", e=>{
+      e.preventDefault();
+      highlightSlot(targetSlotFromEvent(e));
+    });
+    day.addEventListener("dragleave", e=>{
+      if(!day.contains(e.relatedTarget)){
+        day.querySelectorAll(".slot.drop").forEach(el=>el.classList.remove("drop"));
+      }
+    });
+    day.addEventListener("drop", e=>{
+      e.preventDefault();
+      day.querySelectorAll(".slot.drop").forEach(el=>el.classList.remove("drop"));
+      const targetSlot = targetSlotFromEvent(e);
+      const newId = e.dataTransfer.getData("application/x-new");
+      const moveUid = e.dataTransfer.getData("application/x-move");
+      if(newId){
+        const t = BLOCK_TYPES.find(b=>b.id===newId); if(!t) return;
+        const nb = {
+          uid: cryptoRandom(),
+          typeId: newId,
+          day: i,
+          slot: targetSlot,
+          dur: t.dur,
+        };
+        if(t.custom){
+          const name = prompt("Nombre del bloque:", "");
+          if(name===null) return;
+          const eStr = prompt("Energía por hora (ej. -15, +10):", "-10");
+          if(eStr===null) return;
+          const eNum = parseInt(eStr,10);
+          if(isNaN(eNum)){ alert("Energía inválida"); return; }
+          nb.name = name.trim() || "Personalizado";
+          nb.energy = eNum;
+        }
+        currentWeek().blocks.push(nb);
+      } else if(moveUid){
+        const b = currentWeek().blocks.find(b=>b.uid===moveUid);
+        if(b){ b.day = i; b.slot = targetSlot; }
+      }
+      saveState(); renderAll();
+    });
 
     grid.appendChild(day);
   }
