@@ -49,9 +49,10 @@
     font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;
     transition:background .2s, color .2s}
   button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
-  input{font:inherit;color:var(--ink);background:var(--input-bg);border:1px solid var(--line);
+  input, textarea{font:inherit;color:var(--ink);background:var(--input-bg);border:1px solid var(--line);
     border-radius:8px;padding:6px 10px;outline:none}
-  input:focus{border-color:var(--ink)}
+  input:focus, textarea:focus{border-color:var(--ink)}
+  textarea{width:100%;min-height:100px;resize:vertical;line-height:1.5;font-size:13px}
 
   .app{display:grid;grid-template-columns:280px 1fr 320px;gap:18px;padding:18px;min-height:100vh}
 
@@ -284,11 +285,8 @@
     </div>
     <div class="tpl-list" id="tplList"></div>
 
-    <div class="quote">
-      <b>Domingo · planificación (máx 1h):</b><br>
-      mover bloques · distribuir carga · equilibrar trading, negocio, salud y vida.<br><br>
-      <b>Días de desconexión:</b> los días sin bloques de trabajo ya son días libres. No hace falta marcarlos.
-    </div>
+    <h2 style="margin-top:6px">Foco de la semana</h2>
+    <textarea id="weekNotes" placeholder="¿Qué 2-3 cosas importantes quieres conseguir esta semana?"></textarea>
   </aside>
 
 </div>
@@ -831,6 +829,10 @@ document.getElementById("saveTpl").onclick = saveCurrentAsTemplate;
 document.getElementById("tplName").addEventListener("keydown", e=>{
   if(e.key==="Enter") saveCurrentAsTemplate();
 });
+document.getElementById("weekNotes").addEventListener("input", (e)=>{
+  currentWeek().notes = e.target.value;
+  saveState();
+});
 
 const MOTIV = [
   "Sostener años, no días.",
@@ -939,7 +941,13 @@ function renderBalance(){
   }
 }
 
-function renderAll(){ renderGrid(); renderStats(); renderBalance(); }
+function renderNotes(){
+  const ta = document.getElementById("weekNotes");
+  if(!ta) return;
+  ta.value = currentWeek().notes || "";
+}
+
+function renderAll(){ renderGrid(); renderStats(); renderBalance(); renderNotes(); }
 
 applyTheme();
 renderPalette();
