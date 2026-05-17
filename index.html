@@ -110,9 +110,9 @@
   .slot.half{border-top:1px dashed var(--line-soft);opacity:.6}
   .slot.drop{background:rgba(59,130,246,.12)}
 
-  .block{border-radius:8px;padding:6px 8px;color:#fff;font-size:12px;font-weight:500;
+  .block{border-radius:8px;padding:3px 8px 4px;color:#fff;font-size:12px;font-weight:500;
     cursor:grab;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.1);
-    display:flex;flex-direction:column;gap:1px;margin:2px 4px;position:relative;
+    display:flex;flex-direction:column;justify-content:center;gap:1px;margin:2px 4px;position:relative;
     border-left:3px solid rgba(0,0,0,.18)}
   .block:active{cursor:grabbing}
   .block .b-name{display:flex;justify-content:space-between;align-items:center;gap:6px}
@@ -129,9 +129,9 @@
   .drop-preview{position:absolute;left:4px;right:4px;border-radius:8px;
     background:rgba(59,130,246,.15);border:2px dashed rgba(59,130,246,.7);
     pointer-events:none;z-index:2;box-sizing:border-box}
-  .block.short{padding:2px 8px;font-size:11px}
+  .block.short{padding:0 6px;justify-content:center}
   .block.short .b-meta{display:none}
-  .block.short .b-name{font-size:10.5px}
+  .block.short .b-name span{font-size:11px}
   .day[data-day-index="5"]{background:linear-gradient(0deg, rgba(148,163,184,.04), rgba(148,163,184,.04)), var(--slot-bg)}
   .block.overlap{outline:2px solid #ef4444;outline-offset:-2px;animation:pulse 1.4s ease-in-out infinite}
   @keyframes pulse{0%,100%{outline-color:#ef4444}50%{outline-color:#fca5a5}}
